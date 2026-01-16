@@ -335,7 +335,7 @@ export const Envelope: React.FC = () => {
                         anchorX="center"
                         anchorY="middle"
                     >
-                        Untuk Arum
+                        Spesial buat Arum ✨
                     </Text>
                 </group>
 

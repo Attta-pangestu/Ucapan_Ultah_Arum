@@ -117,11 +117,22 @@ const CartoonMascot: React.FC<MascotProps> = ({ className = "fixed bottom-4 left
 export const Overlay: React.FC = () => {
   const phase = useStore(state => state.phase);
   const setPhase = useStore(state => state.setPhase);
+  const [showVideo, setShowVideo] = useState(false);
 
   const handleStart = async () => {
     await AudioManager.init();
     AudioManager.playSound('bgm');
     setPhase(Phase.Envelope);
+  };
+
+  const handleOpenVideo = () => {
+      AudioManager.pauseBgm();
+      setShowVideo(true);
+  };
+
+  const handleCloseVideo = () => {
+      AudioManager.resumeBgm();
+      setShowVideo(false);
   };
 
   // Intro Screen
@@ -150,10 +161,10 @@ export const Overlay: React.FC = () => {
         <div className="relative z-10 flex flex-col items-center text-center p-6 w-full max-w-md h-full justify-center">
           
           {/* Top Section */}
-          <div className="mb-6 animate-fade-in-up">
-            <p className="text-green-300/80 font-serif italic text-lg mb-2">Teruntuk</p>
+          <div className="mb-8 animate-fade-in-up">
+            <p className="text-green-300/90 font-serif italic text-xl md:text-2xl mb-4 drop-shadow-md">Selamat Ulang Tahun</p>
             <h1
-              className="text-6xl md:text-8xl font-serif text-transparent bg-clip-text bg-gradient-to-r from-green-200 via-green-100 to-green-200 tracking-widest drop-shadow-[0_0_10px_rgba(74,222,128,0.5)]"
+              className="text-6xl md:text-8xl font-serif text-transparent bg-clip-text bg-gradient-to-r from-green-200 via-green-100 to-green-200 tracking-widest drop-shadow-[0_0_15px_rgba(74,222,128,0.6)]"
               style={{ fontFamily: "'Cinzel', serif" }}
             >
               ARUM
@@ -161,34 +172,34 @@ export const Overlay: React.FC = () => {
           </div>
 
           {/* Slogan */}
-          <div className="mb-8 animate-fade-in-up" style={{ animationDelay: "0.2s" }}>
+          <div className="mb-12 animate-fade-in-up" style={{ animationDelay: "0.2s" }}>
              <p 
-               className="text-xl md:text-2xl font-serif text-transparent bg-clip-text bg-gradient-to-r from-amber-200 via-yellow-100 to-amber-200 tracking-wide"
+               className="text-lg md:text-xl font-serif text-transparent bg-clip-text bg-gradient-to-r from-amber-200 via-yellow-100 to-amber-200 tracking-wide"
                style={{ fontFamily: "'Playfair Display', serif" }}
              >
                "Aurum Splendet in Aeternum"
              </p>
-             <div className="w-24 h-px bg-gradient-to-r from-transparent via-yellow-400 to-transparent mx-auto mt-2 opacity-50" />
+             <div className="w-24 h-px bg-gradient-to-r from-transparent via-yellow-400 to-transparent mx-auto mt-3 opacity-50" />
           </div>
 
-          {/* Mascot Center Stage */}
-          <div className="mb-10 scale-110 animate-fade-in-up" style={{ animationDelay: "0.4s" }}>
+          {/* Mascot Center Stage - Increased Spacing */}
+          <div className="mb-16 scale-110 animate-fade-in-up" style={{ animationDelay: "0.4s" }}>
              <CartoonMascot className="relative transform-none" />
           </div>
 
-          {/* Start Button */}
-          <div className="animate-fade-in-up" style={{ animationDelay: "0.6s" }}>
+          {/* Start Button - Custom Text */}
+          <div className="animate-fade-in-up w-full px-4" style={{ animationDelay: "0.6s" }}>
             <button
                 onClick={handleStart}
-                className="group relative px-10 py-3 overflow-hidden rounded-full transition-all duration-500 border border-green-600/50 hover:border-green-400 hover:shadow-[0_0_20px_rgba(74,222,128,0.3)]"
+                className="group relative px-8 py-4 w-full md:w-auto overflow-hidden rounded-full transition-all duration-500 border border-green-600/50 hover:border-green-400 hover:shadow-[0_0_25px_rgba(74,222,128,0.4)] hover:scale-[1.02] active:scale-95"
             >
                 <div className="absolute inset-0 bg-green-900/40 group-hover:bg-green-800/60 transition-all duration-500" />
-                <span className="relative text-green-100 uppercase tracking-[0.2em] text-sm font-medium">
-                Mulai Petualangan
+                <span className="relative text-green-50 normal-case tracking-wider text-sm md:text-base font-serif italic">
+                  "Aku siapin surprises buat kamu, klik sini ya Arum"
                 </span>
             </button>
-            <p className="mt-4 text-green-500/40 text-[10px] tracking-widest uppercase">
-                Tap to Start
+            <p className="mt-4 text-green-500/40 text-[10px] tracking-widest uppercase animate-pulse">
+                Tap to Open
             </p>
           </div>
 
@@ -253,16 +264,51 @@ export const Overlay: React.FC = () => {
         )}
 
         {phase === Phase.Beach && (
-           <div className="animate-fade-in-up">
+           <div className="animate-fade-in-up flex flex-col items-center gap-4">
              <p className="text-white/90 font-serif text-lg tracking-wider drop-shadow-md">
                Geser layar untuk berkeliling pantai
              </p>
+             
+             {/* CTA Video Button */}
+             <button 
+                onClick={handleOpenVideo}
+                className="bg-white/10 backdrop-blur-md border border-white/30 px-6 py-2 rounded-full text-white font-serif hover:bg-white/20 transition-all flex items-center gap-2 pointer-events-auto cursor-pointer"
+             >
+                <span>🎬</span> Lihat Video Ucapan
+             </button>
+
              <p className="text-white/60 text-xs mt-1">
                ✨ Baca setiap papan ucapan ✨
              </p>
            </div>
         )}
       </div>
+
+      {/* Cinema Mode Modal */}
+      {showVideo && (
+          <div className="fixed inset-0 z-[100] bg-black flex flex-col items-center justify-center p-4 animate-fade-in">
+              <div className="relative w-full max-w-4xl aspect-video bg-black rounded-lg overflow-hidden shadow-2xl border border-gray-800">
+                  <video 
+                    src="/video_ultah.webm" 
+                    className="w-full h-full object-contain" 
+                    controls 
+                    autoPlay
+                  />
+                  <button 
+                    onClick={handleCloseVideo}
+                    className="absolute top-4 right-4 bg-black/50 text-white w-10 h-10 rounded-full flex items-center justify-center hover:bg-white/20 transition-all text-xl"
+                  >
+                    ✕
+                  </button>
+              </div>
+              <button 
+                onClick={handleCloseVideo}
+                className="mt-8 text-white/50 hover:text-white transition-colors uppercase tracking-widest text-xs"
+              >
+                Kembali ke Pantai
+              </button>
+          </div>
+      )}
     </div>
   );
 };

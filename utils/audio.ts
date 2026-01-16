@@ -22,6 +22,18 @@ export class AudioManager {
     }
   }
 
+  static pauseBgm() {
+    if (this.bgm) {
+        this.bgm.pause();
+    }
+  }
+
+  static resumeBgm() {
+    if (this.bgm) {
+        this.bgm.play().catch(e => console.log("Resume failed", e));
+    }
+  }
+
   static fadeOutBgm() {
     if (!this.bgm) return;
     

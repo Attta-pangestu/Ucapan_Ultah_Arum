@@ -32,6 +32,11 @@ const slides: TextSlide[] = [
         title: "Kedewasaan",
         content: "Selamat memasuki fase baru\npenuh kedewasaan,\nkebijaksanaan, dan cinta",
         icon: "🌸"
+    },
+    {
+        title: "Surprise!",
+        content: "Aku pinter bikin kue ultah lho! 🧑‍🍳\nAku bikin ini spesial untuk Arum...\nKue Matcha! 🍵",
+        icon: "🎂"
     }
 ];
 
