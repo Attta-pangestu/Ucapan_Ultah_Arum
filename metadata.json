@@ -1,0 +1,7 @@
+{
+  "name": "Arum's 26th Journey",
+  "description": "A cinematic 3D birthday experience featuring a realistic matcha cake, interactive candle blowing, and particle-based messaging.",
+  "requestFramePermissions": [
+    "microphone"
+  ]
+}
