@@ -1,21 +1,48 @@
 export class AudioManager {
+  private static bgm: HTMLAudioElement | null = null;
   private static ctx: AudioContext | null = null;
-  private static bgmNode: AudioBufferSourceNode | null = null;
   private static analyser: AnalyserNode | null = null;
   private static micStream: MediaStream | null = null;
 
   static async init() {
-    if (!this.ctx) {
-      this.ctx = new (window.AudioContext || (window as any).webkitAudioContext)();
+    if (!this.bgm) {
+      this.bgm = new Audio('/song.mp3');
+      this.bgm.loop = true;
+      this.bgm.volume = 0.5;
     }
-    if (this.ctx.state === 'suspended') {
-      await this.ctx.resume();
+    
+    if (!this.ctx) {
+        this.ctx = new (window.AudioContext || (window as any).webkitAudioContext)();
     }
   }
 
+  static playSound(type: 'bgm' | 'firework' | 'pop') {
+    if (type === 'bgm' && this.bgm) {
+      this.bgm.play().catch(e => console.log("Audio play failed (user interaction required):", e));
+    }
+  }
+
+  static fadeOutBgm() {
+    if (!this.bgm) return;
+    
+    const fadeOut = setInterval(() => {
+      if (this.bgm && this.bgm.volume > 0.05) {
+        this.bgm.volume -= 0.05;
+      } else {
+        clearInterval(fadeOut);
+        if (this.bgm) {
+            this.bgm.pause();
+            this.bgm.volume = 0.5; // Reset for next time
+        }
+      }
+    }, 200);
+  }
+
+  // --- Microphone Logic (Optional/Legacy support) ---
   static async startMicrophoneDetection(onBlowDetected: () => void) {
     if (!this.ctx) await this.init();
-    
+    if (this.ctx!.state === 'suspended') await this.ctx!.resume();
+
     try {
       this.micStream = await navigator.mediaDevices.getUserMedia({ audio: true });
       const source = this.ctx!.createMediaStreamSource(this.micStream);
@@ -31,14 +58,12 @@ export class AudioManager {
         this.analyser.getByteFrequencyData(dataArray);
         
         let sum = 0;
-        // Focus on lower frequencies for "blowing" sound
         for (let i = 0; i < bufferLength / 2; i++) {
           sum += dataArray[i];
         }
         const average = sum / (bufferLength / 2);
 
-        // Threshold for "blowing"
-        if (average > 80) { // Adjustable threshold
+        if (average > 60) { 
            onBlowDetected();
            this.stopMicrophone();
         } else {
@@ -47,7 +72,7 @@ export class AudioManager {
       };
       checkVolume();
     } catch (e) {
-      console.warn("Microphone access denied or error", e);
+      console.warn("Mic access denied", e);
     }
   }
 
@@ -57,16 +82,5 @@ export class AudioManager {
       this.micStream = null;
     }
     this.analyser = null;
-  }
-
-  static playSound(type: 'bgm' | 'firework' | 'pop') {
-    // In a real app, we would load buffers. 
-    // For this demo, we assume silence or placehoder logic.
-    // Placeholder for "Happy Birthday" BGM start.
-    console.log(`Playing sound: ${type}`);
-  }
-
-  static fadeOutBgm() {
-    console.log("Fading out BGM");
   }
 }

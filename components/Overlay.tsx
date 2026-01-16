@@ -46,9 +46,13 @@ With love 💚`;
 
 // --- 2D Components ---
 
-const CartoonMascot: React.FC = () => {
+interface MascotProps {
+  className?: string;
+}
+
+const CartoonMascot: React.FC<MascotProps> = ({ className = "fixed bottom-4 left-4 md:bottom-8 md:left-8" }) => {
   return (
-    <div className="fixed bottom-4 left-4 md:bottom-8 md:left-8 z-50 flex items-end gap-3 animate-slide-up pointer-events-none">
+    <div className={`${className} z-50 flex items-end gap-3 pointer-events-none`}>
       
       {/* 2D Cake with Animated Flame */}
       <div className="relative w-16 h-16 md:w-20 md:h-20 mr-2">
@@ -123,48 +127,71 @@ export const Overlay: React.FC = () => {
   // Intro Screen
   if (phase === Phase.Intro) {
     return (
-      <div className="absolute inset-0 flex items-center justify-center bg-gradient-to-br from-black via-green-950 to-black z-50">
-        {/* Background Elements */}
-        <div className="absolute inset-0 overflow-hidden">
-          {Array.from({ length: 20 }).map((_, i) => (
+      <div className="absolute inset-0 flex flex-col items-center justify-center bg-gradient-to-br from-black via-green-950 to-black z-50 overflow-hidden">
+        {/* Animated background particles */}
+        <div className="absolute inset-0">
+          {Array.from({ length: 15 }).map((_, i) => (
             <div
               key={i}
-              className="absolute rounded-full bg-green-400/20 animate-pulse"
+              className="absolute rounded-full bg-green-400/10 animate-pulse"
               style={{
-                width: `${Math.random() * 100 + 50}px`,
-                height: `${Math.random() * 100 + 50}px`,
+                width: `${Math.random() * 150 + 50}px`,
+                height: `${Math.random() * 150 + 50}px`,
                 left: `${Math.random() * 100}%`,
                 top: `${Math.random() * 100}%`,
-                animationDelay: `${Math.random() * 2}s`,
-                animationDuration: `${2 + Math.random() * 3}s`,
+                animationDelay: `${Math.random() * 5}s`,
+                animationDuration: `${5 + Math.random() * 5}s`,
               }}
             />
           ))}
         </div>
 
-        <div className="relative text-center p-6 md:p-12 max-w-lg w-full">
-          <h1
-            className="text-5xl md:text-7xl font-serif text-transparent bg-clip-text bg-gradient-to-r from-green-200 via-green-100 to-green-200 mb-2 md:mb-4 tracking-wider"
-            style={{ fontFamily: "'Cinzel', serif" }}
-          >
-            ARUM
-          </h1>
-          <p
-            className="text-xl md:text-3xl text-green-300/80 mb-8 md:mb-10 tracking-widest"
-            style={{ fontFamily: "'Playfair Display', serif" }}
-          >
-            26th Birthday
-          </p>
+        {/* Content Container */}
+        <div className="relative z-10 flex flex-col items-center text-center p-6 w-full max-w-md h-full justify-center">
+          
+          {/* Top Section */}
+          <div className="mb-6 animate-fade-in-up">
+            <p className="text-green-300/80 font-serif italic text-lg mb-2">Teruntuk</p>
+            <h1
+              className="text-6xl md:text-8xl font-serif text-transparent bg-clip-text bg-gradient-to-r from-green-200 via-green-100 to-green-200 tracking-widest drop-shadow-[0_0_10px_rgba(74,222,128,0.5)]"
+              style={{ fontFamily: "'Cinzel', serif" }}
+            >
+              ARUM
+            </h1>
+          </div>
 
-          <button
-            onClick={handleStart}
-            className="group relative px-8 py-3 md:px-12 md:py-4 overflow-hidden rounded-full transition-all duration-500 border border-green-700 hover:border-green-500 active:scale-95 touch-manipulation"
-          >
-            <div className="absolute inset-0 bg-green-900/50 group-hover:bg-green-800/80 transition-all duration-500" />
-            <span className="relative text-green-100 uppercase tracking-[0.2em] md:tracking-[0.3em] text-xs md:text-sm font-light">
-              Mulai
-            </span>
-          </button>
+          {/* Slogan */}
+          <div className="mb-8 animate-fade-in-up" style={{ animationDelay: "0.2s" }}>
+             <p 
+               className="text-xl md:text-2xl font-serif text-transparent bg-clip-text bg-gradient-to-r from-amber-200 via-yellow-100 to-amber-200 tracking-wide"
+               style={{ fontFamily: "'Playfair Display', serif" }}
+             >
+               "Aurum Splendet in Aeternum"
+             </p>
+             <div className="w-24 h-px bg-gradient-to-r from-transparent via-yellow-400 to-transparent mx-auto mt-2 opacity-50" />
+          </div>
+
+          {/* Mascot Center Stage */}
+          <div className="mb-10 scale-110 animate-fade-in-up" style={{ animationDelay: "0.4s" }}>
+             <CartoonMascot className="relative transform-none" />
+          </div>
+
+          {/* Start Button */}
+          <div className="animate-fade-in-up" style={{ animationDelay: "0.6s" }}>
+            <button
+                onClick={handleStart}
+                className="group relative px-10 py-3 overflow-hidden rounded-full transition-all duration-500 border border-green-600/50 hover:border-green-400 hover:shadow-[0_0_20px_rgba(74,222,128,0.3)]"
+            >
+                <div className="absolute inset-0 bg-green-900/40 group-hover:bg-green-800/60 transition-all duration-500" />
+                <span className="relative text-green-100 uppercase tracking-[0.2em] text-sm font-medium">
+                Mulai Petualangan
+                </span>
+            </button>
+            <p className="mt-4 text-green-500/40 text-[10px] tracking-widest uppercase">
+                Tap to Start
+            </p>
+          </div>
+
         </div>
       </div>
     );
@@ -199,8 +226,8 @@ export const Overlay: React.FC = () => {
         )}
       </div>
 
-      {/* Render Cartoon Mascot only during Cake Phase */}
-      {phase === Phase.Cake && <CartoonMascot />}
+      {/* Render Cartoon Mascot only during Cake Phase (Corner) */}
+      {phase === Phase.Cake && <CartoonMascot className="fixed bottom-4 left-4 md:bottom-8 md:left-8 animate-slide-up" />}
 
       <div className="text-center w-full mb-10">
         {phase === Phase.Envelope && (
@@ -220,7 +247,7 @@ export const Overlay: React.FC = () => {
               Make a wish & Tiup Lilinnya
             </p>
             <p className="text-xs text-gray-500 mt-2">
-              (Klik api lilin atau tiup ke mic)
+              (Klik api lilin atau tiup ke mikrofon)
             </p>
           </div>
         )}
