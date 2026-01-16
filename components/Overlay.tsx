@@ -258,7 +258,7 @@ export const Overlay: React.FC = () => {
               Make a wish & Tiup Lilinnya
             </p>
             <p className="text-xs text-gray-500 mt-2">
-              (Klik api lilin atau tiup ke mikrofon)
+              (Klik api lilin, ketuk layar, atau tiup ke mikrofon)
             </p>
           </div>
         )}
