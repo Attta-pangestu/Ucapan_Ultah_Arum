@@ -4,8 +4,8 @@ export enum Phase {
   Appreciation = 2,
   Cake = 3,
   Blowing = 4,
-  Fireworks = 5,
-  Message = 6,
+  Interruption = 5, // Fase "Eits bentar..."
+  Beach = 6,        // Fase Pantai
 }
 
 export interface ParticleState {
