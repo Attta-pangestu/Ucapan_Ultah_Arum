@@ -288,25 +288,57 @@ export const Overlay: React.FC = () => {
       {showVideo && (
           <div className="fixed inset-0 z-[100] bg-black flex flex-col items-center justify-center p-4 animate-fade-in">
               <div className="relative w-full max-w-4xl aspect-video bg-black rounded-lg overflow-hidden shadow-2xl border border-gray-800">
-                  <video 
-                    src="/video_ultah.webm" 
-                    className="w-full h-full object-contain" 
-                    controls 
+                  <video
+                    src="/video_ultah.webm"
+                    className="w-full h-full object-contain"
+                    controls
                     autoPlay
+                    playsInline
+                    webkit-playsinline="true"
                   />
-                  <button 
+                  <button
                     onClick={handleCloseVideo}
-                    className="absolute top-4 right-4 bg-black/50 text-white w-10 h-10 rounded-full flex items-center justify-center hover:bg-white/20 transition-all text-xl"
+                    className="absolute top-4 right-4 bg-black/50 text-white w-10 h-10 rounded-full flex items-center justify-center hover:bg-white/20 transition-all text-xl z-50"
                   >
                     ✕
                   </button>
               </div>
-              <button 
-                onClick={handleCloseVideo}
-                className="mt-8 text-white/50 hover:text-white transition-colors uppercase tracking-widest text-xs"
-              >
-                Kembali ke Pantai
-              </button>
+              <div className="flex gap-4 mt-4">
+                <button
+                  onClick={handleCloseVideo}
+                  className="text-white/50 hover:text-white transition-colors uppercase tracking-widest text-xs"
+                >
+                  Kembali ke Pantai
+                </button>
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    const video = document.querySelector('video');
+                    if (video) {
+                      if (video.paused) {
+                        video.play();
+                      } else {
+                        video.pause();
+                      }
+                    }
+                  }}
+                  className="text-white/50 hover:text-white transition-colors uppercase tracking-widest text-xs"
+                >
+                  Putar/Jeda
+                </button>
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    const video = document.querySelector('video');
+                    if (video) {
+                      video.currentTime = 0;
+                    }
+                  }}
+                  className="text-white/50 hover:text-white transition-colors uppercase tracking-widest text-xs"
+                >
+                  Putar Ulang
+                </button>
+              </div>
           </div>
       )}
     </div>

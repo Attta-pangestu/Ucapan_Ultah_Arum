@@ -248,16 +248,16 @@ export const BeachWorld: React.FC = () => {
 
             {/* Message Boards - Optimized Layout */}
             {messages.map((msg, index) => {
-                // Tighter curve for mobile to keep visible
-                const spreadFactor = isMobile ? 0.3 : 0.45;
-                const angle = (index - (messages.length - 1) / 2) * spreadFactor; 
-                
-                // Adjust radius based on screen
-                const radius = isMobile ? 7.5 : 9;
-                
+                // Wider curve for mobile to prevent overlap
+                const spreadFactor = isMobile ? 0.4 : 0.45;
+                const angle = (index - (messages.length - 1) / 2) * spreadFactor;
+
+                // Adjust radius based on screen - larger for mobile to spread out
+                const radius = isMobile ? 10 : 9;
+
                 // Positions
                 const x = Math.sin(angle) * radius;
-                const z = -Math.cos(angle) * radius + (isMobile ? 2 : 3); 
+                const z = -Math.cos(angle) * radius + (isMobile ? 2 : 3);
 
                 // Look at center (camera start)
                 const lookAngle = Math.atan2(0 - x, 8 - z);
@@ -265,7 +265,7 @@ export const BeachWorld: React.FC = () => {
                 return (
                     <AestheticMessageBoard
                         key={index}
-                        position={[x, -0.5, z]} 
+                        position={[x, -0.5, z]}
                         rotation={[0, lookAngle, 0]}
                         title={msg.title}
                         text={msg.text}
