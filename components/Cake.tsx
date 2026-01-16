@@ -53,10 +53,10 @@ export const Cake: React.FC = () => {
     if (flameRef1.current) gsap.to(flameRef1.current.scale, { x: 0, y: 0, z: 0, duration: 0.2 });
     if (flameRef2.current) gsap.to(flameRef2.current.scale, { x: 0, y: 0, z: 0, duration: 0.2 });
 
-    // Wait for darkness then trigger fireworks
+    // Wait for darkness then show message
     setTimeout(() => {
       setPhase(Phase.Fireworks);
-    }, 2000);
+    }, 2500);
   };
 
   // Listen for external blow trigger if mic is used
@@ -67,9 +67,9 @@ export const Cake: React.FC = () => {
     return () => AudioManager.stopMicrophone();
   }, [phase]);
 
-  const matchaColor = "#7BA05B"; // Richer matcha green
-  const spongeColor = "#8DAF6E"; // Slightly lighter texture
-  const creamColor = "#FFFAF0"; // Warm white cream
+  const matchaColor = "#7BA05B";
+  const spongeColor = "#8DAF6E";
+  const creamColor = "#FFFAF0";
   const plateColor = "#E0E0E0";
   const strawberryColor = "#D32F2F";
 
@@ -86,11 +86,14 @@ export const Cake: React.FC = () => {
 
   // Toppings generator (Strawberries)
   const strawberryPositions = [
-      { x: 0.8, z: 0.8, r: -Math.PI/4 },
-      { x: -0.8, z: 0.8, r: Math.PI/4 },
-      { x: 0.8, z: -0.8, r: -Math.PI*0.75 },
-      { x: -0.8, z: -0.8, r: Math.PI*0.75 },
+    { x: 0.8, z: 0.8, r: -Math.PI / 4 },
+    { x: -0.8, z: 0.8, r: Math.PI / 4 },
+    { x: 0.8, z: -0.8, r: -Math.PI * 0.75 },
+    { x: -0.8, z: -0.8, r: Math.PI * 0.75 },
   ];
+
+  // Hide solid cake when blowing starts (Particles take over)
+  if (phase < Phase.Cake || phase >= Phase.Blowing) return null;
 
   return (
     <group ref={groupRef} position={[0, -1, 0]}>
@@ -105,7 +108,7 @@ export const Cake: React.FC = () => {
         <Cylinder args={[1.5, 1.5, 0.5, 64]} position={[0, 0.25, 0]}>
           <meshStandardMaterial color={spongeColor} roughness={0.8} />
         </Cylinder>
-        
+
         {/* Cream Filling Layer */}
         <Cylinder args={[1.5, 1.5, 0.15, 64]} position={[0, 0.575, 0]}>
           <meshStandardMaterial color={creamColor} roughness={0.4} />
@@ -118,7 +121,7 @@ export const Cake: React.FC = () => {
 
         {/* Top Frosting */}
         <Cylinder args={[1.52, 1.52, 0.1, 64]} position={[0, 1.2, 0]}>
-            <meshStandardMaterial color={matchaColor} roughness={0.5} />
+          <meshStandardMaterial color={matchaColor} roughness={0.5} />
         </Cylinder>
       </group>
 
@@ -126,25 +129,25 @@ export const Cake: React.FC = () => {
       <group position={[0, 1.3, 0]}>
         {/* Cream Piping Ring */}
         {pipings.map((pos, i) => (
-           <mesh key={i} position={[pos.x, 0, pos.z]}>
-             <sphereGeometry args={[0.15, 16, 16]} />
-             <meshStandardMaterial color={creamColor} roughness={0.3} />
-           </mesh>
+          <mesh key={i} position={[pos.x, 0, pos.z]}>
+            <sphereGeometry args={[0.15, 16, 16]} />
+            <meshStandardMaterial color={creamColor} roughness={0.3} />
+          </mesh>
         ))}
 
         {/* Strawberries */}
         {strawberryPositions.map((pos, i) => (
-            <group key={`sb-${i}`} position={[pos.x, 0.1, pos.z]} rotation={[0, pos.r, 0]}>
-                <mesh>
-                    <coneGeometry args={[0.15, 0.35, 16]} />
-                    <meshStandardMaterial color={strawberryColor} roughness={0.4} />
-                </mesh>
-                {/* Green leaf/stem detail */}
-                <mesh position={[0, 0.15, 0]}>
-                    <cylinderGeometry args={[0.08, 0.02, 0.1, 5]} />
-                    <meshStandardMaterial color="green" />
-                </mesh>
-            </group>
+          <group key={`sb-${i}`} position={[pos.x, 0.1, pos.z]} rotation={[0, pos.r, 0]}>
+            <mesh>
+              <coneGeometry args={[0.15, 0.35, 16]} />
+              <meshStandardMaterial color={strawberryColor} roughness={0.4} />
+            </mesh>
+            {/* Green leaf/stem detail */}
+            <mesh position={[0, 0.15, 0]}>
+              <cylinderGeometry args={[0.08, 0.02, 0.1, 5]} />
+              <meshStandardMaterial color="green" />
+            </mesh>
+          </group>
         ))}
       </group>
 
@@ -158,7 +161,6 @@ export const Cake: React.FC = () => {
           position={[0, 0.5, 0.08]}
           fontSize={0.4}
           color="#FFD700"
-          font="https://fonts.gstatic.com/s/roboto/v30/KFOmCnqEu92Fr1Mu4mxM.woff"
           anchorX="center"
           anchorY="middle"
         >
@@ -176,11 +178,10 @@ export const Cake: React.FC = () => {
         <Cylinder args={[0.06, 0.06, 0.8, 16]} position={[0, 0.4, 0]}>
           <meshStandardMaterial color="#FFFAF0" />
         </Cylinder>
-         <Text
+        <Text
           position={[0, 0.5, 0.08]}
           fontSize={0.4}
           color="#FFD700"
-          font="https://fonts.gstatic.com/s/roboto/v30/KFOmCnqEu92Fr1Mu4mxM.woff"
           anchorX="center"
           anchorY="middle"
         >

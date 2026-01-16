@@ -1,249 +1,298 @@
-import React, { useMemo, useRef, useEffect } from 'react';
+import React, { useMemo, useRef, useEffect, useState } from 'react';
 import { useFrame, useThree } from '@react-three/fiber';
 import * as THREE from 'three';
-import { FontLoader } from 'three/examples/jsm/loaders/FontLoader';
-import { TextGeometry } from 'three/examples/jsm/geometries/TextGeometry';
 import { useStore } from '../store';
 import { Phase } from '../types';
-import gsap from 'gsap';
 
 // Configuration
-const PARTICLE_COUNT = 12000; // Significantly increased for better legibility
-const FONT_URL = 'https://threejs.org/examples/fonts/helvetiker_regular.typeface.json';
+const PARTICLE_COUNT = 30000;
 
-const SHORT_TEXT = "Happy 26th\nArum";
-const LONG_TEXT = `Twenty-six:
-A year to bloom,
-to lead, and to inspire.
+const LONG_TEXT = `SELAMAT ULANG TAHUN
+ARUM
 
-Semoga tahun ini menjadi
-bab terbaik dalam hidupmu,
-penuh dengan keberanian
-dan kebahagiaan
-yang tak terduga.
+Keberhasilan - Karir
+Ambisi - Cinta
 
-Bersinar terus, bintangku.`;
+Semoga semua terwujud
+di usia 26 ini.
+
+Teruslah Bersinar!`;
+
+// 1. Robust Text to Points Generator
+const createTextPoints = (text: string, fontSize: number): number[][] => {
+  const canvas = document.createElement('canvas');
+  const ctx = canvas.getContext('2d')!;
+
+  // Use a large canvas to ensure text fits
+  const width = 1024;
+  const height = 1024;
+  canvas.width = width;
+  canvas.height = height;
+
+  ctx.fillStyle = '#000000';
+  ctx.fillRect(0, 0, width, height);
+
+  ctx.fillStyle = '#FFFFFF';
+  ctx.font = `bold ${fontSize}px Arial, sans-serif`;
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+
+  const lines = text.split('\n');
+  const lineHeight = fontSize * 1.4;
+  const totalTextHeight = lines.length * lineHeight;
+  const startY = (height - totalTextHeight) / 2 + lineHeight / 2;
+
+  lines.forEach((line, i) => {
+    ctx.fillText(line.trim(), width / 2, startY + i * lineHeight);
+  });
+
+  const imageData = ctx.getImageData(0, 0, width, height);
+  const data = imageData.data;
+  const points: number[][] = [];
+  
+  // Dense sampling for clear text
+  const sampleRate = 2; 
+
+  for (let y = 0; y < height; y += sampleRate) {
+    for (let x = 0; x < width; x += sampleRate) {
+      const i = (y * width + x) * 4;
+      // Check red channel for white pixel
+      if (data[i] > 128) {
+        // Center coordinates (0,0) based on canvas center
+        const px = (x - width / 2) * 0.012; // Adjust scale to fit camera
+        const py = -(y - height / 2) * 0.012;
+        points.push([px, py, 0]);
+      }
+    }
+  }
+  return points;
+};
+
+// 2. Generate Cake Points
+const createCakePoints = (): { positions: number[], colors: number[] } => {
+  const positions: number[] = [];
+  const colors: number[] = [];
+  
+  const matchaColor = new THREE.Color("#7BA05B");
+  const spongeColor = new THREE.Color("#8DAF6E");
+  const creamColor = new THREE.Color("#FFFAF0");
+  const strawberryColor = new THREE.Color("#D32F2F");
+
+  for (let i = 0; i < PARTICLE_COUNT; i++) {
+    const angle = Math.random() * Math.PI * 2;
+    const radius = Math.sqrt(Math.random()) * 1.5;
+    const x = Math.cos(angle) * radius;
+    const z = Math.sin(angle) * radius;
+    
+    let y = (Math.random() * 1.0) - 0.5;
+    let col = spongeColor;
+
+    const layer = Math.random();
+    if (layer < 0.35) { y = -0.5 + Math.random() * 0.3; col = spongeColor; }
+    else if (layer < 0.5) { y = -0.2 + Math.random() * 0.2; col = creamColor; }
+    else if (layer < 0.85) { y = 0.0 + Math.random() * 0.3; col = spongeColor; }
+    else { 
+        y = 0.3 + Math.random() * 0.05; col = matchaColor; 
+        if (Math.random() < 0.05) { y += 0.1; col = strawberryColor; }
+    }
+
+    positions.push(x, y - 0.2, z);
+    colors.push(col.r, col.g, col.b);
+  }
+  return { positions, colors };
+};
 
 export const Particles: React.FC = () => {
   const phase = useStore(state => state.phase);
   const setPhase = useStore(state => state.setPhase);
   const pointsRef = useRef<THREE.Points>(null);
   const { viewport, mouse } = useThree();
+  const [isReady, setIsReady] = useState(false);
 
-  // Buffers
-  const positions = useMemo(() => new Float32Array(PARTICLE_COUNT * 3), []);
-  const targetPositions = useMemo(() => new Float32Array(PARTICLE_COUNT * 3), []);
-  const colors = useMemo(() => new Float32Array(PARTICLE_COUNT * 3), []);
-  const originalPositions = useMemo(() => new Float32Array(PARTICLE_COUNT * 3), []); 
+  // Use refs for large arrays to avoid re-renders
+  const particles = useMemo(() => {
+    return {
+        pos: new Float32Array(PARTICLE_COUNT * 3),
+        col: new Float32Array(PARTICLE_COUNT * 3),
+        target: new Float32Array(PARTICLE_COUNT * 3),
+        vel: new Float32Array(PARTICLE_COUNT * 3)
+    };
+  }, []);
 
-  const burstTriggered = useRef(false);
+  const explosionTriggered = useRef(false);
 
+  // Initialize
   useEffect(() => {
-    const loader = new FontLoader();
-    loader.load(FONT_URL, (font) => {
-      
-      const createTextPoints = (text: string, size: number, yOffset: number) => {
-        const geometry = new TextGeometry(text, {
-          font: font,
-          size: size,
-          height: 0, // Flat text is clearer for particles
-          curveSegments: 8,
-          bevelEnabled: false,
-        });
+    const cake = createCakePoints();
+    for (let i = 0; i < PARTICLE_COUNT * 3; i++) {
+        particles.pos[i] = cake.positions[i];
+        particles.col[i] = cake.colors[i];
+        particles.vel[i] = 0;
+    }
+    setIsReady(true);
+  }, []);
+
+  // Handle Logic Transitions
+  useEffect(() => {
+    if (!isReady) return;
+
+    if (phase === Phase.Blowing && !explosionTriggered.current) {
+        explosionTriggered.current = true;
         
-        geometry.center();
-        geometry.translate(0, yOffset, 0);
-
-        const posAttr = geometry.attributes.position;
-        const pts: number[] = [];
-        
-        // Populate points from geometry vertices
-        for(let i=0; i < posAttr.count; i++) {
-            pts.push(posAttr.getX(i), posAttr.getY(i), posAttr.getZ(i));
-        }
-        return pts;
-      };
-
-      // Create geometry points
-      const shortPoints = createTextPoints(SHORT_TEXT, 1.2, 0);
-      const longPoints = createTextPoints(LONG_TEXT, 0.55, 0); // Adjusted size
-
-      // Helper to fill buffer with random sampling from source points if fewer points than particles
-      const fillBuffer = (targetBuffer: Float32Array, sourcePoints: number[]) => {
-        const numSourcePoints = sourcePoints.length / 3;
-        for (let i = 0; i < PARTICLE_COUNT; i++) {
-          // Random sampling provides more uniform density than modulo
-          const randomIndex = Math.floor(Math.random() * numSourcePoints); 
-          const srcIdx = randomIndex * 3;
-          
-          targetBuffer[i * 3] = sourcePoints[srcIdx];
-          targetBuffer[i * 3 + 1] = sourcePoints[srcIdx + 1];
-          targetBuffer[i * 3 + 2] = sourcePoints[srcIdx + 2];
-        }
-      };
-
-      if (phase === Phase.Fireworks && !burstTriggered.current) {
-        burstTriggered.current = true;
-        
-        // Start from bottom center
-        for (let i = 0; i < PARTICLE_COUNT * 3; i+=3) {
-            positions[i] = (Math.random() - 0.5) * 0.5;
-            positions[i+1] = -3;
-            positions[i+2] = (Math.random() - 0.5) * 0.5;
-        }
-
-        // Firework Explosion Targets (Sphere)
-        for (let i = 0; i < PARTICLE_COUNT * 3; i+=3) {
-            const u = Math.random();
-            const v = Math.random();
-            const theta = 2 * Math.PI * u;
-            const phi = Math.acos(2 * v - 1);
-            const r = 4 + Math.random() * 2;
-            targetPositions[i] = r * Math.sin(phi) * Math.cos(theta);
-            targetPositions[i+1] = r * Math.sin(phi) * Math.sin(theta) + 1.0;
-            targetPositions[i+2] = r * Math.cos(phi);
-            
-            // Random vibrant colors
-            const color = new THREE.Color().setHSL(Math.random(), 1, 0.6);
-            colors[i] = color.r;
-            colors[i+1] = color.g;
-            colors[i+2] = color.b;
-        }
-
-        const duration = 2;
-        const tempPos = { t: 0 };
-        
-        gsap.to(tempPos, {
-            t: 1,
-            duration: duration,
-            ease: "power2.out",
-            onUpdate: () => {
-                // Manual interpolation for "physics-like" movement
-                for (let i = 0; i < PARTICLE_COUNT * 3; i+=3) {
-                    positions[i] += (targetPositions[i] - positions[i]) * 0.08;
-                    positions[i+1] += (targetPositions[i+1] - positions[i+1]) * 0.08;
-                    positions[i+2] += (targetPositions[i+2] - positions[i+2]) * 0.08;
-                }
-                if(pointsRef.current) pointsRef.current.geometry.attributes.position.needsUpdate = true;
-            },
-            onComplete: () => {
-                // Morph to Short Text
-                fillBuffer(targetPositions, shortPoints);
-                
-                const gold = new THREE.Color("#FFD700");
-                for(let i=0; i<PARTICLE_COUNT*3; i+=3) {
-                    colors[i] = gold.r;
-                    colors[i+1] = gold.g;
-                    colors[i+2] = gold.b;
-                }
-                if(pointsRef.current) pointsRef.current.geometry.attributes.color.needsUpdate = true;
-
-                gsap.to(positions, {
-                    endArray: targetPositions,
-                    duration: 2.5,
-                    ease: "power3.inOut",
-                    onUpdate: () => {
-                        if(pointsRef.current) pointsRef.current.geometry.attributes.position.needsUpdate = true;
-                    },
-                    onComplete: () => {
-                        setTimeout(() => setPhase(Phase.Message), 3500);
-                    }
-                });
-            }
-        });
-      }
-
-      if (phase === Phase.Message) {
-         fillBuffer(targetPositions, longPoints);
-         
-         // Store copy for interaction
-         for(let i=0; i<PARTICLE_COUNT*3; i++) {
-             originalPositions[i] = targetPositions[i];
-         }
-
-         gsap.to(positions, {
-            endArray: targetPositions,
-            duration: 3,
-            ease: "power2.out",
-            onUpdate: () => {
-                if(pointsRef.current) pointsRef.current.geometry.attributes.position.needsUpdate = true;
-            }
-         });
-      }
-    });
-  }, [phase, setPhase, positions, targetPositions, colors, originalPositions]);
-
-  // Interactive Repulsion
-  useFrame(() => {
-    if (phase === Phase.Message && pointsRef.current) {
-        const mouseVec = new THREE.Vector3(mouse.x * viewport.width / 2, mouse.y * viewport.height / 2, 0);
-        const positionAttr = pointsRef.current.geometry.attributes.position;
-        
+        // 1. Setup Explosion Physics
         for (let i = 0; i < PARTICLE_COUNT; i++) {
             const idx = i * 3;
-            let px = positionAttr.getX(i);
-            let py = positionAttr.getY(i);
-            let pz = positionAttr.getZ(i);
+            // Vector from center
+            const dx = particles.pos[idx];
+            const dy = particles.pos[idx+1] - (-0.5);
+            const dz = particles.pos[idx+2];
+            const len = Math.sqrt(dx*dx + dy*dy + dz*dz) + 0.001;
+            const speed = 0.05 + Math.random() * 0.2; // Faster explosion
 
-            const ox = originalPositions[idx];
-            const oy = originalPositions[idx+1];
-            const oz = originalPositions[idx+2];
-
-            // 2D Interaction plane check
-            const dx = px - mouseVec.x;
-            const dy = py - mouseVec.y;
-            const distSq = dx*dx + dy*dy;
-            const radius = 1.2;
-
-            if (distSq < radius * radius) {
-                const dist = Math.sqrt(distSq);
-                const force = (radius - dist) / radius;
-                const angle = Math.atan2(dy, dx);
-                
-                // Push away
-                px += Math.cos(angle) * force * 0.2;
-                py += Math.sin(angle) * force * 0.2;
-                pz += force * 0.5; // Also push in Z for 3D effect
-            } else {
-                // Stronger return force for clearer text
-                px += (ox - px) * 0.1;
-                py += (oy - py) * 0.1;
-                pz += (oz - pz) * 0.1;
-            }
-
-            positionAttr.setXYZ(i, px, py, pz);
+            particles.vel[idx] = (dx / len) * speed;
+            particles.vel[idx+1] = (dy / len) * speed + 0.05;
+            particles.vel[idx+2] = (dz / len) * speed;
         }
-        positionAttr.needsUpdate = true;
+
+        // 2. Prepare Text Targets
+        // Use larger font size for better readability
+        const textPoints = createTextPoints(LONG_TEXT, 40); 
+        const textColor = new THREE.Color("#FFFDF5");
+        const starColor = new THREE.Color("#FFD700");
+
+        // Map particles to text
+        for (let i = 0; i < PARTICLE_COUNT; i++) {
+            const idx = i * 3;
+            
+            if (i < textPoints.length) {
+                // Determine particle is part of text
+                const pt = textPoints[i];
+                particles.target[idx] = pt[0];
+                particles.target[idx+1] = pt[1] + 1.0; // Shift up
+                particles.target[idx+2] = pt[2]; // Z = 0
+            } else {
+                // Excess particles become background stars/dust
+                // Spread them around the text
+                const theta = Math.random() * Math.PI * 2;
+                const r = 3 + Math.random() * 4; // Radius around text
+                particles.target[idx] = Math.cos(theta) * r;
+                particles.target[idx+1] = (Math.random() - 0.5) * 6 + 1;
+                particles.target[idx+2] = Math.sin(theta) * r - 2; // Behind text
+            }
+        }
+
+        // 3. Schedule transition to Message
+        setTimeout(() => {
+             // Force color update to bright text color
+             for(let i=0; i<PARTICLE_COUNT; i++) {
+                 const idx = i*3;
+                 let c = textColor;
+                 
+                 // If it's a background particle (index >= textPoints length), make it gold/dim
+                 if (i >= textPoints.length) {
+                     c = starColor;
+                     // Randomly dim some stars
+                     if(Math.random() > 0.5) c = new THREE.Color("#555");
+                 }
+
+                 particles.col[idx] = c.r;
+                 particles.col[idx+1] = c.g;
+                 particles.col[idx+2] = c.b;
+             }
+             if(pointsRef.current) pointsRef.current.geometry.attributes.color.needsUpdate = true;
+             
+             setPhase(Phase.Message);
+        }, 1500);
     }
+  }, [phase, isReady]);
+
+  useFrame((state, delta) => {
+      if (!pointsRef.current || !isReady) return;
+      
+      const posAttr = pointsRef.current.geometry.attributes.position;
+      const { pos, vel, target } = particles;
+
+      if (phase === Phase.Blowing) {
+          // Explosion physics
+          for(let i=0; i<PARTICLE_COUNT; i++) {
+              const idx = i*3;
+              pos[idx] += vel[idx];
+              pos[idx+1] += vel[idx+1];
+              pos[idx+2] += vel[idx+2];
+              
+              vel[idx] *= 0.94; // Drag
+              vel[idx+1] -= 0.0015; // Gravity
+          }
+          posAttr.needsUpdate = true;
+      }
+      else if (phase === Phase.Message) {
+          // Converge to text
+          const speed = 2.0 * delta;
+          
+          // Mouse interaction vars
+          const mouseVec = new THREE.Vector3(mouse.x * 5, mouse.y * 5, 0);
+          
+          for(let i=0; i<PARTICLE_COUNT; i++) {
+              const idx = i*3;
+              
+              let tx = target[idx];
+              let ty = target[idx+1];
+              let tz = target[idx+2];
+
+              // Simple mouse repulsion
+              const dx = pos[idx] - mouseVec.x;
+              const dy = pos[idx+1] - mouseVec.y;
+              const distSq = dx*dx + dy*dy;
+              
+              if (distSq < 1.0) {
+                  const force = (1.0 - distSq) * 0.5;
+                  tx += dx * force;
+                  ty += dy * force;
+              }
+
+              // Lerp
+              pos[idx] += (tx - pos[idx]) * speed;
+              pos[idx+1] += (ty - pos[idx+1]) * speed;
+              pos[idx+2] += (tz - pos[idx+2]) * speed;
+          }
+          posAttr.needsUpdate = true;
+      }
   });
 
-  if (phase < Phase.Fireworks) return null;
+  if (phase < Phase.Cake) return null;
 
   return (
-    <points ref={pointsRef}>
-      <bufferGeometry>
-        <bufferAttribute
-          attach="attributes-position"
-          count={PARTICLE_COUNT}
-          array={positions}
-          itemSize={3}
-        />
-        <bufferAttribute
-          attach="attributes-color"
-          count={PARTICLE_COUNT}
-          array={colors}
-          itemSize={3}
-        />
-      </bufferGeometry>
-      <pointsMaterial
-        size={0.05} // Smaller size for sharper text with high count
-        vertexColors
-        blending={THREE.AdditiveBlending}
-        depthWrite={false}
-        transparent
-        opacity={0.9}
-        sizeAttenuation={true}
-      />
-    </points>
+    <group>
+        <points ref={pointsRef}>
+            <bufferGeometry>
+                <bufferAttribute
+                    attach="attributes-position"
+                    count={PARTICLE_COUNT}
+                    array={particles.pos}
+                    itemSize={3}
+                />
+                <bufferAttribute
+                    attach="attributes-color"
+                    count={PARTICLE_COUNT}
+                    array={particles.col}
+                    itemSize={3}
+                />
+            </bufferGeometry>
+            <pointsMaterial
+                size={0.035}
+                vertexColors
+                blending={THREE.AdditiveBlending}
+                depthWrite={false}
+                transparent
+                opacity={phase >= Phase.Blowing ? 1 : 0}
+                sizeAttenuation={true}
+            />
+        </points>
+        
+        {/* Glow for text readability */}
+        {phase === Phase.Message && (
+            <pointLight position={[0, 1, 2]} intensity={0.5} color="#FFF" distance={10} />
+        )}
+    </group>
   );
 };

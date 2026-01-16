@@ -1,9 +1,11 @@
 export enum Phase {
   Intro = 0,
-  Cake = 1,
-  Blowing = 2,
-  Fireworks = 3,
-  Message = 4,
+  Envelope = 1,
+  Appreciation = 2,
+  Cake = 3,
+  Blowing = 4,
+  Fireworks = 5,
+  Message = 6,
 }
 
 export interface ParticleState {

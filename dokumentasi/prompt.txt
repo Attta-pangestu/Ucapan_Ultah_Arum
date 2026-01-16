@@ -1,0 +1,84 @@
+Ini adalah dokumen spesifikasi proyek teknis yang dirancang agar mudah dipahami oleh AI developer agent atau programmer manusia. Dokumen ini merinci alur pengalaman pengguna (User Experience Flow) dan persyaratan teknis untuk setiap tahapannya.
+DOKUMEN SPESIFIKASI PROYEK: "Arum's 26th Matcha & Particle Journey"
+Ringkasan Proyek
+Membangun pengalaman web cinematic dan interaktif untuk ulang tahun ke-26 Arum Savitri Chairunnisa. Web ini menggabungkan elemen 3D realistik (kue), interaksi pengguna (meniup lilin), animasi transisi yang mulus (kembang api), dan visualisasi data tingkat lanjut (teks berbasis partikel dinamis).
+Target Audien: Arum Savitri Chairunnisa (Wanita Karir, 26 Tahun).
+Vibe Utama: Elegan, Magis, Personal, Berteknologi Tinggi.
+Alur Pengalaman Pengguna (UX Roadmap)
+Proyek ini dibagi menjadi 4 fase (stage) yang berurutan tanpa loading screen yang mengganggu:
+FASE 1: The Realistic Opening (Suasana)
+Visual: Layar penuh menampilkan sebuah kue ulang tahun rasa Matcha (hijau teh) yang teksturnya terlihat realistik secara 3D.
+Pencahayaan: Suasana agak gelap (remang-remang), fokus cahaya berasal dari dua buah lilin angka "2" dan "6" yang menyala di atas kue. Api lilin bergoyang natural.
+Audio: Lagu instrumental "Happy Birthday" versi piano atau orkestra yang lembut mulai berputar (setelah interaksi pertama pengguna untuk mematuhi kebijakan browser).
+FASE 2: The Interaction (Aksi)
+Trigger: Pengguna diminta untuk "meniup" lilin.
+Opsi Utama (Lebih Mudah): Klik/Tap pada area lilin.
+Opsi Lanjutan (Jika AI mampu): Menggunakan akses mikrofon browser untuk mendeteksi suara tiupan.
+Reaksi: Saat ditiup/diklik, api pada lilin "26" padam. Asap tipis realistik mengepul sebentar dari sumbu lilin. Ruangan menjadi gelap gulita sesaat. Audio lagu berhenti atau mengecil perlahan (fade out).
+FASE 3: The Celebration Transition (Transisi Magis)
+Visual: Dari kegelapan bekas lilin, muncul percikan api yang dengan cepat meluncur ke atas layar dan meledak menjadi kembang api digital yang meriah.
+Audio: Efek suara ledakan kembang api yang megah.
+Morfosis: Partikel-partikel sisa ledakan kembang api tidak hilang, melainkan bergerak melambat dan berkumpul di tengah layar membentuk tulisan bercahaya: "Happy Birthday Arum".
+FASE 4: The Message & Interaction (Pesan Inti)
+Visual: Tulisan "Happy Birthday Arum" perlahan memecah diri menjadi ribuan partikel kecil yang menyebar memenuhi layar.
+Formasi Baru: Partikel-partikel tersebut kemudian berkumpul kembali membentuk paragraf ucapan harapan (teks panjang yang sudah Anda siapkan).
+Interaktivitas Akhir:
+Teks partikel ini bersifat dinamis. Jika mouse digerakkan melewatinya (atau jari di layar sentuh), partikel akan buyar sedikit menghindari kursor (efek repulsion) lalu kembali ke posisi semula, menciptakan kesan teks tersebut "hidup" dan cair.
+Latar belakang musik ambient yang tenang dan inspiratif berputar.
+Spesifikasi Teknis & Stack Rekomendasi
+Untuk mencapai tingkat realisme dan interaktivitas ini, penggunaan library grafis 3D sangat disarankan.
+A. Tech Stack Utama
+Core: HTML5, Modern JavaScript (ES6+).
+3D/Graphics Engine: Three.js (Sangat Direkomendasikan). Ini diperlukan untuk merender kue matcha 3D, pencahayaan realistik lilin, dan sistem partikel yang kompleks (kembang api dan teks).
+Animation Library: GSAP (GreenSock Animation Platform). Untuk mengatur timeline transisi antar fase (misal: timing matinya lilin ke munculnya kembang api) agar sangat mulus.
+Audio: Web Audio API (browser native).
+B. Rincian Implementasi per Fase (Untuk AI Agent)
+FASE 1: Setup 3D Scene (Three.js)
+Scene & Camera: Buat scene Three.js dengan kamera perspektif.
+Model Kue: Load model 3D kue matcha (format .gltf atau .glb). Pastikan tekstur terlihat seperti bolu matcha dan krim.
+Lilin & Api:
+Tambahkan model lilin angka "2" dan "6".
+Gunakan PointLight berwarna oranye hangat di posisi sumbu lilin untuk simulasi cahaya api.
+Gunakan sistem partikel sederhana atau shader untuk membuat animasi api bergoyang.
+Audio Init: Siapkan AudioListener dan AudioLoader untuk lagu Happy Birthday. Catatan: Browser modern memblokir autoplay audio. Anda mungkin perlu layar pembuka "Klik untuk Memulai" di awal sekali.
+FASE 2: Logika "Meniup" Lilin
+Raycaster (Input): Implementasikan Three.js Raycaster untuk mendeteksi klik mouse atau sentuhan pada objek lilin.
+Event Handler: Saat terdeteksi klik:
+Matikan (set intensitas ke 0) PointLight lilin.
+Hentikan animasi partikel api.
+Piculah emitter partikel baru untuk efek asap putih tipis.
+Mulai fade out audio lagu Happy Birthday.
+Panggil fungsi transisi ke Fase 3 setelah jeda singkat (misal 1 detik gelap).
+FASE 3: Kembang Api ke Teks
+Sistem Partikel Kembang Api: Gunakan THREE.Points dan custom shader material. Buat emitter yang meluncurkan partikel dari posisi kue ke atas, lalu meledak menyebar.
+Morfosis Partikel (Bagian Tersulit):
+Siapkan target geometry untuk teks "Happy Birthday Arum" (bisa dibuat menggunakan TextGeometry di Three.js, lalu ambil posisi vertices-nya).
+Alih-alih menghilangkan partikel kembang api, gunakan GSAP untuk menganimasikan posisi setiap partikel dari posisi ledakan menuju posisi vertices pada teks target.
+Beri warna emas/terang pada partikel.
+FASE 4: Partikel Teks Interaktif
+Switch Target Geometry: Ubah target bentuk partikel dari teks pendek ("Happy Birthday Arum") menjadi teks ucapan panjang (lihat Opsi Ucapan di bawah).
+Fisika Partikel (Interactive):
+Dalam animation loop (fungsi requestAnimationFrame), lacak posisi mouse (normalized device coordinates).
+Hitung jarak antara kursor dan setiap partikel.
+Jika jarak < radius tertentu, terapkan gaya tolak (repulsion force) pada posisi partikel. Partikel harus selalu berusaha kembali ke posisi aslinya (origin) dengan efek easing.
+Aset yang Dibutuhkan (Input Data)
+AI Agent akan membutuhkan file-file ini untuk bekerja:
+File Model 3D (.glb/.gltf): Model kue matcha dengan lilin angka 26.
+File Audio (.mp3):
+Lagu latar "Happy Birthday" (instrumental lembut).
+SFX tiupan/padam api.
+SFX ledakan kembang api.
+Lagu latar ambient untuk fase akhir.
+Teks Ucapan (Untuk Fase 4):
+(Silakan pilih salah satu opsi dari percakapan sebelumnya, contoh: Opsi 1 "Empowering Woman")
+"Selamat ulang tahun ke-26, Arum! Di usia ini, dunia ada di genggamanmu. Semoga setiap target tercapai, kerja keras membuahkan hasil, dan kamu tetap bersinar menjadi dirimu yang luar biasa. Teruslah menginspirasi!"
+Font File (.json untuk Three.js): Font yang elegan untuk merender teks menjadi geometri 3D.
+Kriteria Sukses (Definition of Done)
+
+Web berjalan lancar di Desktop (Chrome/Safari) dan Mobile modern.
+
+Transisi dari kue 3D -> kembang api -> teks partikel terasa seperti satu kesatuan cerita, tidak terputus-putus.
+
+Pencahayaan lilin terlihat realistik (menerangi permukaan kue).
+
+Teks partikel di akhir dapat dibaca dengan jelas namun tetap terlihat seperti kumpulan titik-titik cahaya yang buyar jika disentuh.
