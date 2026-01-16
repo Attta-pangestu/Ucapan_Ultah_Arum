@@ -39,18 +39,16 @@ const AppreciationSlide: React.FC<{
     slide: TextSlide;
     visible: boolean;
     index: number;
-}> = ({ slide, visible, index }) => {
+    isMobile: boolean;
+}> = ({ slide, visible, index, isMobile }) => {
     const groupRef = useRef<THREE.Group>(null);
     const [opacity, setOpacity] = useState(0);
     const opacityRef = useRef({ val: 0 });
-    const { viewport } = useThree();
-    
-    const isMobile = viewport.width < viewport.height;
-    
+
     // Dynamic sizing based on screen width
     const titleSize = isMobile ? 0.4 : 0.5;
     const contentSize = isMobile ? 0.18 : 0.25;
-    const contentWidth = isMobile ? viewport.width * 0.8 : 6;
+    const contentWidth = isMobile ? 10 : 6; // Using fixed values since we can't access viewport here
 
     useEffect(() => {
         if (visible) {
@@ -105,7 +103,7 @@ const AppreciationSlide: React.FC<{
                 anchorY="middle"
                 letterSpacing={0.1}
                 fillOpacity={opacity}
-                maxWidth={viewport.width * 0.9}
+                maxWidth={isMobile ? 8 : 10}
             >
                 {slide.title}
             </Text>
@@ -118,7 +116,7 @@ const AppreciationSlide: React.FC<{
                 anchorX="center"
                 anchorY="middle"
                 textAlign="center"
-                maxWidth={contentWidth}
+                maxWidth={isMobile ? 8 : 6}
                 lineHeight={1.6}
                 fillOpacity={opacity}
             >
@@ -197,6 +195,25 @@ export const Appreciation: React.FC = () => {
     const setPhase = useStore(state => state.setPhase);
     const [currentSlide, setCurrentSlide] = useState(0);
     const [isActive, setIsActive] = useState(false);
+    const [isMobile, setIsMobile] = useState(false);
+
+    useEffect(() => {
+        // Check if we're in a browser environment
+        if (typeof window !== 'undefined') {
+            const checkIsMobile = () => {
+                setIsMobile(window.innerWidth < window.innerHeight);
+            };
+
+            checkIsMobile();
+
+            // Add resize listener
+            window.addEventListener('resize', checkIsMobile);
+
+            return () => {
+                window.removeEventListener('resize', checkIsMobile);
+            };
+        }
+    }, []);
 
     useEffect(() => {
         if (phase === Phase.Appreciation) {
@@ -240,6 +257,7 @@ export const Appreciation: React.FC = () => {
                     slide={slide}
                     visible={isActive && currentSlide === index}
                     index={index}
+                    isMobile={isMobile}
                 />
             ))}
 
@@ -248,7 +266,7 @@ export const Appreciation: React.FC = () => {
                 {slides.map((_, index) => (
                     <mesh
                         key={index}
-                        position={[(index - (slides.length - 1) / 2) * 0.3, 0, 0]}
+                        position={[(index - (slides.length - 1) / 2) * 0.25, 0, 0]}
                     >
                         <circleGeometry args={[0.05, 16]} />
                         <meshBasicMaterial

@@ -54,6 +54,82 @@ export const Overlay: React.FC = () => {
     setPhase(Phase.Envelope);
   };
 
+// --- 2D Components ---
+
+const CartoonMascot: React.FC = () => {
+  return (
+    <div className="fixed bottom-4 left-4 md:bottom-8 md:left-8 z-50 flex items-end gap-3 animate-slide-up">
+      
+      {/* 2D Cake with Animated Flame */}
+      <div className="relative w-16 h-16 md:w-20 md:h-20 mr-2">
+        {/* Plate */}
+        <div className="absolute bottom-0 w-full h-2 bg-gray-200 rounded-full" />
+        {/* Cake Body */}
+        <div className="absolute bottom-2 left-2 right-2 h-10 bg-pink-300 rounded-lg border-2 border-pink-400" />
+        <div className="absolute bottom-12 left-2 right-2 h-2 bg-white rounded-full opacity-50" />
+        {/* Frosting Drips */}
+        <div className="absolute bottom-9 left-2 right-2 h-4 bg-white rounded-t-lg flex justify-around">
+            <div className="w-2 h-3 bg-white rounded-full -mb-1"></div>
+            <div className="w-2 h-4 bg-white rounded-full -mb-2"></div>
+            <div className="w-2 h-2 bg-white rounded-full"></div>
+            <div className="w-2 h-3 bg-white rounded-full -mb-1"></div>
+        </div>
+        
+        {/* Candle */}
+        <div className="absolute bottom-12 left-1/2 transform -translate-x-1/2 w-2 h-6 bg-yellow-200 border border-yellow-400" />
+        
+        {/* Animated Flame */}
+        <div className="absolute bottom-[4.5rem] left-1/2 transform -translate-x-1/2 w-3 h-4 bg-orange-500 rounded-full rounded-t-none animate-pulse origin-bottom">
+           <div className="absolute bottom-0 left-0.5 w-2 h-3 bg-yellow-300 rounded-full animate-ping opacity-75"></div>
+        </div>
+      </div>
+
+      {/* Cartoon Bear */}
+      <div className="relative w-20 h-24 md:w-24 md:h-28">
+         {/* Ears */}
+         <div className="absolute top-0 left-1 w-6 h-6 bg-amber-700 rounded-full" />
+         <div className="absolute top-0 right-1 w-6 h-6 bg-amber-700 rounded-full" />
+         
+         {/* Head */}
+         <div className="absolute top-2 w-full h-20 bg-amber-600 rounded-full border-2 border-amber-800 z-10 flex flex-col items-center justify-center">
+            {/* Eyes */}
+            <div className="flex gap-4 mt-4">
+                <div className="w-2 h-2 bg-black rounded-full animate-bounce delay-75" />
+                <div className="w-2 h-2 bg-black rounded-full animate-bounce" />
+            </div>
+            {/* Snout */}
+            <div className="w-8 h-6 bg-amber-200 rounded-full mt-1 flex justify-center items-center">
+                <div className="w-3 h-2 bg-black rounded-full mt-1" />
+            </div>
+            {/* Cheeks */}
+            <div className="absolute top-10 left-2 w-3 h-2 bg-pink-400 rounded-full opacity-60" />
+            <div className="absolute top-10 right-2 w-3 h-2 bg-pink-400 rounded-full opacity-60" />
+         </div>
+         
+         {/* Body (Partial) */}
+         <div className="absolute bottom-0 left-2 right-2 h-10 bg-amber-700 rounded-t-xl" />
+      </div>
+
+      {/* Speech Bubble */}
+      <div className="absolute bottom-28 left-0 md:left-10 bg-white px-4 py-2 rounded-2xl rounded-bl-none shadow-lg animate-bounce">
+        <p className="text-pink-600 font-bold text-sm md:text-base whitespace-nowrap">
+          Happy Birthday Arum! 🎉
+        </p>
+      </div>
+    </div>
+  );
+};
+
+export const Overlay: React.FC = () => {
+  const phase = useStore(state => state.phase);
+  const setPhase = useStore(state => state.setPhase);
+
+  const handleStart = async () => {
+    await AudioManager.init();
+    AudioManager.playSound('bgm');
+    setPhase(Phase.Envelope);
+  };
+
   // Intro Screen
   if (phase === Phase.Intro) {
     return (
@@ -133,11 +209,17 @@ export const Overlay: React.FC = () => {
         )}
       </div>
 
+      {/* Render Cartoon Mascot only during Cake Phase */}
+      {phase === Phase.Cake && <CartoonMascot />}
+
       <div className="text-center w-full mb-10">
         {phase === Phase.Envelope && (
           <div className="animate-bounce">
             <p className="text-green-900/80 font-serif text-lg tracking-wider">
-              Geser amplop ke atas
+              Geser amplop ke atas untuk membuka
+            </p>
+            <p className="text-green-800/50 text-xs mt-2">
+              ✨
             </p>
           </div>
         )}
