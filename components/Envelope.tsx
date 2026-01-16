@@ -113,8 +113,10 @@ export const Envelope: React.FC = () => {
     const [isOpening, setIsOpening] = useState(false);
     const [showConfetti, setShowConfetti] = useState(false);
     const [dragOffset, setDragOffset] = useState(0);
+    const [hovered, setHovered] = useState(false);
     const isDragging = useRef(false);
     const startY = useRef(0);
+    const clickTimeout = useRef<NodeJS.Timeout | null>(null);
 
     // Slide away animation when appreciation starts
     useEffect(() => {
@@ -130,7 +132,7 @@ export const Envelope: React.FC = () => {
 
     // Floating animation
     useFrame((state) => {
-        if (groupRef.current && phase === Phase.Envelope && !isOpening && !isDragging.current) {
+        if (groupRef.current && phase === Phase.Envelope && !isOpening && !isDragging.current && !hovered) {
             groupRef.current.position.y = Math.sin(state.clock.elapsedTime * 0.8) * 0.1;
             groupRef.current.rotation.y = Math.sin(state.clock.elapsedTime * 0.3) * 0.05;
         }
@@ -139,6 +141,19 @@ export const Envelope: React.FC = () => {
     const handlePointerDown = (e: THREE.Event) => {
         if (phase !== Phase.Envelope || isOpening) return;
         e.stopPropagation();
+
+        // Set a timeout to detect a simple click
+        if (clickTimeout.current) {
+            clearTimeout(clickTimeout.current);
+        }
+
+        clickTimeout.current = setTimeout(() => {
+            if (!isDragging.current) {
+                // If not dragging after a short delay, treat as click
+                openEnvelope();
+            }
+        }, 200); // 200ms threshold for click vs drag
+
         isDragging.current = true;
         startY.current = e.point.y;
         (e.target as HTMLElement).setPointerCapture?.(e.pointerId);
@@ -147,7 +162,7 @@ export const Envelope: React.FC = () => {
     const handlePointerMove = (e: THREE.Event) => {
         if (!isDragging.current || isOpening) return;
         e.stopPropagation();
-        
+
         const delta = e.point.y - startY.current;
         // Limit drag to moving up (opening)
         const newOffset = Math.max(0, Math.min(1.5, delta * 2)); // Amplify movement
@@ -160,7 +175,7 @@ export const Envelope: React.FC = () => {
         }
 
         // Trigger open if dragged enough
-        if (newOffset > 1.2) {
+        if (newOffset > 0.8) { // Reduced threshold to make it easier to open
             openEnvelope();
         }
     };
@@ -170,7 +185,7 @@ export const Envelope: React.FC = () => {
         isDragging.current = false;
         (e.target as HTMLElement).releasePointerCapture?.(e.pointerId);
 
-        if (dragOffset > 1.2) {
+        if (dragOffset > 0.8) {
             openEnvelope();
         } else {
             // Reset if not dragged enough
@@ -182,6 +197,13 @@ export const Envelope: React.FC = () => {
     const openEnvelope = () => {
         if (isOpening) return;
         setIsOpening(true);
+
+        // Clear any pending click timeout
+        if (clickTimeout.current) {
+            clearTimeout(clickTimeout.current);
+            clickTimeout.current = null;
+        }
+
         isDragging.current = false;
 
         // Animate flap fully opening
@@ -236,11 +258,14 @@ export const Envelope: React.FC = () => {
             <group
                 ref={groupRef}
                 position={[0, 0, 0]}
+                scale={hovered ? 1.05 : 1}
                 visible={phase === Phase.Envelope || (phase === Phase.Appreciation && isOpening)}
                 onPointerDown={handlePointerDown}
                 onPointerMove={handlePointerMove}
                 onPointerUp={handlePointerUp}
                 onPointerLeave={handlePointerUp}
+                onPointerOver={() => setHovered(true)}
+                onPointerOut={() => setHovered(false)}
             >
                 {/* Envelope Body */}
                 <Box args={[3, 2, 0.1]} position={[0, 0, 0]}>
@@ -280,12 +305,12 @@ export const Envelope: React.FC = () => {
                      {!isOpening && (
                         <Text
                             position={[0, -0.9, 0.1]}
-                            fontSize={0.15}
+                            fontSize={0.12}
                             color="#8d6e63"
                             anchorX="center"
                             anchorY="middle"
                         >
-                            Geser ke atas
+                            Klik atau geser ke atas
                         </Text>
                     )}
                 </group>
