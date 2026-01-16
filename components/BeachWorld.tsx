@@ -1,8 +1,8 @@
 import React, { useRef } from 'react';
 import { useStore } from '../store';
 import { Phase } from '../types';
-import { Text, Sky, Cloud } from '@react-three/drei';
-import { useFrame } from '@react-three/fiber';
+import { Text, Sky, Cloud, Dodecahedron } from '@react-three/drei';
+import { useFrame, useThree } from '@react-three/fiber';
 import * as THREE from 'three';
 
 const messages = [
@@ -63,9 +63,19 @@ const MessageBoard: React.FC<{ position: [number, number, number], rotation: [nu
     );
 };
 
+const Rock: React.FC<{ position: [number, number, number], scale: number }> = ({ position, scale }) => {
+    return (
+        <Dodecahedron args={[1, 0]} position={position} scale={scale} rotation={[Math.random(), Math.random(), Math.random()]}>
+            <meshStandardMaterial color="#78909C" roughness={0.8} />
+        </Dodecahedron>
+    );
+};
+
 export const BeachWorld: React.FC = () => {
     const phase = useStore(state => state.phase);
     const groupRef = useRef<THREE.Group>(null);
+    const { viewport } = useThree();
+    const isMobile = viewport.width < viewport.height;
 
     useFrame((state) => {
         if (groupRef.current) {
@@ -78,40 +88,64 @@ export const BeachWorld: React.FC = () => {
     return (
         <group ref={groupRef}>
             {/* Lighting for Beach */}
-            <ambientLight intensity={0.8} color="#FFEDCC" />
-            <directionalLight position={[10, 10, 5]} intensity={1.5} color="#FFD54F" castShadow />
+            <ambientLight intensity={0.6} color="#FFEDCC" />
+            <directionalLight position={[10, 10, 5]} intensity={1.2} color="#FFD54F" castShadow />
+            <pointLight position={[-10, 5, -10]} intensity={0.5} color="#00BFFF" />
 
             {/* Sky */}
-            <Sky sunPosition={[10, 10, -10]} turbidity={0.5} rayleigh={0.5} mieCoefficient={0.005} mieDirectionalG={0.8} />
+            <Sky sunPosition={[100, 20, -100]} turbidity={0.2} rayleigh={0.1} />
 
             {/* Clouds */}
-            <Cloud position={[-4, 8, -10]} opacity={0.5} speed={0.4} width={10} depth={1.5} segments={20} />
-            <Cloud position={[4, 6, -5]} opacity={0.5} speed={0.3} width={10} depth={1.5} segments={20} />
+            <Cloud position={[-8, 10, -20]} opacity={0.6} speed={0.2} width={20} depth={2} segments={20} />
+            <Cloud position={[8, 8, -15]} opacity={0.6} speed={0.15} width={15} depth={2} segments={15} />
 
-            {/* Ocean (Simple Blue Plane) */}
-            <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -0.5, -20]}>
-                <planeGeometry args={[100, 100]} />
-                <meshStandardMaterial color="#4FC3F7" roughness={0.2} metalness={0.1} transparent opacity={0.8} />
+            {/* Ocean */}
+            <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -0.6, -20]}>
+                <planeGeometry args={[200, 100]} />
+                <meshStandardMaterial 
+                    color="#29B6F6" 
+                    roughness={0.1} 
+                    metalness={0.5} 
+                    transparent 
+                    opacity={0.9} 
+                />
             </mesh>
 
             {/* Sand */}
-            <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -0.4, 0]}>
-                <planeGeometry args={[100, 100]} />
+            <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -0.5, 10]}>
+                <planeGeometry args={[200, 100]} />
                 <meshStandardMaterial color="#FFE0B2" roughness={1} />
             </mesh>
 
-            {/* Message Boards arranged in a semi-circle */}
+            {/* Rocks scattered near the water line */}
+            <Rock position={[-8, -0.2, -5]} scale={1.2} />
+            <Rock position={[-9, -0.3, -4]} scale={0.8} />
+            <Rock position={[10, -0.1, -6]} scale={1.5} />
+            <Rock position={[12, -0.3, -5]} scale={1.0} />
+            <Rock position={[-2, -0.4, -7]} scale={0.5} />
+
+            {/* Message Boards arranged in a semi-circle FACING the User (Camera starts at +Z) */}
             {messages.map((msg, index) => {
-                const angle = (index - (messages.length - 1) / 2) * 0.6; // Spread angle
-                const radius = 6;
-                const x = Math.sin(angle) * radius;
-                const z = Math.cos(angle) * radius - 2;
+                // Tighter spread for mobile
+                const spreadFactor = isMobile ? 0.35 : 0.5;
+                const angle = (index - (messages.length - 1) / 2) * spreadFactor; 
                 
+                // Position them further back (near sea, negative Z)
+                // Radius slightly tighter on mobile
+                const radius = isMobile ? 8 : 9;
+                const x = Math.sin(angle) * radius;
+                const z = -Math.cos(angle) * radius + (isMobile ? 2.5 : 3); 
+
+                // Rotate to face (0,0,5) (Camera direction approx)
+                const targetX = 0;
+                const targetZ = 8;
+                const lookAngle = Math.atan2(targetX - x, targetZ - z);
+
                 return (
                     <MessageBoard
                         key={index}
-                        position={[x, -0.4, z]} // Start from ground
-                        rotation={[0, angle, 0]} // Face center
+                        position={[x, -0.5, z]} 
+                        rotation={[0, lookAngle, 0]}
                         title={msg.title}
                         text={msg.text}
                     />

@@ -43,6 +43,14 @@ const AppreciationSlide: React.FC<{
     const groupRef = useRef<THREE.Group>(null);
     const [opacity, setOpacity] = useState(0);
     const opacityRef = useRef({ val: 0 });
+    const { viewport } = useThree();
+    
+    const isMobile = viewport.width < viewport.height;
+    
+    // Dynamic sizing based on screen width
+    const titleSize = isMobile ? 0.4 : 0.5;
+    const contentSize = isMobile ? 0.18 : 0.25;
+    const contentWidth = isMobile ? viewport.width * 0.8 : 6;
 
     useEffect(() => {
         if (visible) {
@@ -79,7 +87,7 @@ const AppreciationSlide: React.FC<{
             {/* Icon */}
             <Text
                 position={[0, 1.5, 0]}
-                fontSize={0.8}
+                fontSize={isMobile ? 0.6 : 0.8}
                 color="#FFD700"
                 anchorX="center"
                 anchorY="middle"
@@ -91,13 +99,13 @@ const AppreciationSlide: React.FC<{
             {/* Title */}
             <Text
                 position={[0, 0.7, 0]}
-                fontSize={0.5}
+                fontSize={titleSize}
                 color="#7BA05B"
                 anchorX="center"
                 anchorY="middle"
-                // Removed custom font to prevent potential loading issues
-                letterSpacing={0.15}
+                letterSpacing={0.1}
                 fillOpacity={opacity}
+                maxWidth={viewport.width * 0.9}
             >
                 {slide.title}
             </Text>
@@ -105,13 +113,13 @@ const AppreciationSlide: React.FC<{
             {/* Content */}
             <Text
                 position={[0, -0.2, 0]}
-                fontSize={0.25}
+                fontSize={contentSize}
                 color="#5D4037"
                 anchorX="center"
                 anchorY="middle"
                 textAlign="center"
-                maxWidth={6}
-                lineHeight={1.5}
+                maxWidth={contentWidth}
+                lineHeight={1.6}
                 fillOpacity={opacity}
             >
                 {slide.content}
@@ -119,7 +127,7 @@ const AppreciationSlide: React.FC<{
 
             {/* Decorative line */}
             <mesh position={[0, -1, 0]}>
-                <planeGeometry args={[2, 0.01]} />
+                <planeGeometry args={[isMobile ? 1.5 : 2, 0.01]} />
                 <meshBasicMaterial color="#7BA05B" transparent opacity={opacity * 0.5} />
             </mesh>
         </group>

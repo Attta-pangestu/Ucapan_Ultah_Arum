@@ -10,33 +10,40 @@ import { useStore } from '../store';
 import { Phase } from '../types';
 
 const CameraRig = () => {
-  const { camera } = useThree();
+  const { camera, viewport } = useThree();
   const phase = useStore(state => state.phase);
   const isInteracting = useStore(state => state.isInteracting);
+
+  // Simple mobile detection based on aspect ratio
+  const isMobile = viewport.width < viewport.height;
 
   useFrame((state, delta) => {
     let targetPos: THREE.Vector3;
     let targetLookAt = new THREE.Vector3(0, 0, 0);
 
+    // Distance multipliers for mobile
+    const dist = isMobile ? 1.5 : 1.0; 
+    const heightOffset = isMobile ? 0.5 : 0;
+
     switch (phase) {
       case Phase.Envelope:
-        targetPos = new THREE.Vector3(0, 0, 5);
+        targetPos = new THREE.Vector3(0, 0, 5 * dist);
         break;
       case Phase.Appreciation:
-        targetPos = new THREE.Vector3(0, 0, 6);
+        targetPos = new THREE.Vector3(0, 0, 6 * dist);
         break;
       case Phase.Cake:
       case Phase.Blowing:
-        targetPos = new THREE.Vector3(0, 2, 5);
+        targetPos = new THREE.Vector3(0, 2 + heightOffset, 5 * dist);
         targetLookAt = new THREE.Vector3(0, 0, 0);
         break;
       case Phase.Beach:
         // Position camera to see the beach scene
-        targetPos = new THREE.Vector3(0, 2, 8);
+        targetPos = new THREE.Vector3(0, 2, 8 * (isMobile ? 1.4 : 1.0));
         targetLookAt = new THREE.Vector3(0, 1, 0);
         break;
       default:
-        targetPos = new THREE.Vector3(0, 0, 5);
+        targetPos = new THREE.Vector3(0, 0, 5 * dist);
     }
 
     if (!isInteracting && phase !== Phase.Beach) {

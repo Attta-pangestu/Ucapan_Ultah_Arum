@@ -76,15 +76,15 @@ export const Overlay: React.FC = () => {
           ))}
         </div>
 
-        <div className="relative text-center p-12 max-w-lg">
+        <div className="relative text-center p-6 md:p-12 max-w-lg w-full">
           <h1
-            className="text-5xl md:text-7xl font-serif text-transparent bg-clip-text bg-gradient-to-r from-green-200 via-green-100 to-green-200 mb-4 tracking-wider"
+            className="text-5xl md:text-7xl font-serif text-transparent bg-clip-text bg-gradient-to-r from-green-200 via-green-100 to-green-200 mb-2 md:mb-4 tracking-wider"
             style={{ fontFamily: "'Cinzel', serif" }}
           >
             ARUM
           </h1>
           <p
-            className="text-2xl md:text-3xl text-green-300/80 mb-10 tracking-widest"
+            className="text-xl md:text-3xl text-green-300/80 mb-8 md:mb-10 tracking-widest"
             style={{ fontFamily: "'Playfair Display', serif" }}
           >
             26th Birthday
@@ -92,10 +92,10 @@ export const Overlay: React.FC = () => {
 
           <button
             onClick={handleStart}
-            className="group relative px-12 py-4 overflow-hidden rounded-full transition-all duration-500 border border-green-700 hover:border-green-500"
+            className="group relative px-8 py-3 md:px-12 md:py-4 overflow-hidden rounded-full transition-all duration-500 border border-green-700 hover:border-green-500 active:scale-95 touch-manipulation"
           >
             <div className="absolute inset-0 bg-green-900/50 group-hover:bg-green-800/80 transition-all duration-500" />
-            <span className="relative text-green-100 uppercase tracking-[0.3em] text-sm font-light">
+            <span className="relative text-green-100 uppercase tracking-[0.2em] md:tracking-[0.3em] text-xs md:text-sm font-light">
               Mulai
             </span>
           </button>
