@@ -55,7 +55,13 @@ export const Cake: React.FC = () => {
 
     // Wait for darkness then show message
     setTimeout(() => {
-      setPhase(Phase.Fireworks);
+      setPhase(Phase.Interruption);
+      
+      // After Interruption text, go to Beach (handled here or in Overlay/Store, but simplicity here)
+      setTimeout(() => {
+          setPhase(Phase.Beach);
+      }, 4000); // Show text for 4 seconds
+      
     }, 2500);
   };
 
@@ -67,6 +73,7 @@ export const Cake: React.FC = () => {
     return () => AudioManager.stopMicrophone();
   }, [phase]);
 
+  // ... colors ...
   const matchaColor = "#7BA05B";
   const spongeColor = "#8DAF6E";
   const creamColor = "#FFFAF0";
@@ -92,8 +99,8 @@ export const Cake: React.FC = () => {
     { x: -0.8, z: -0.8, r: Math.PI * 0.75 },
   ];
 
-  // Hide solid cake when blowing starts (Particles take over)
-  if (phase < Phase.Cake || phase >= Phase.Blowing) return null;
+  // Hide cake when Interruption or Beach starts
+  if (phase < Phase.Cake || phase >= Phase.Interruption) return null;
 
   return (
     <group ref={groupRef} position={[0, -1, 0]}>

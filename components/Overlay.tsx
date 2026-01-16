@@ -58,7 +58,7 @@ export const Overlay: React.FC = () => {
   if (phase === Phase.Intro) {
     return (
       <div className="absolute inset-0 flex items-center justify-center bg-gradient-to-br from-black via-green-950 to-black z-50">
-        {/* Animated background particles */}
+        {/* Background Elements */}
         <div className="absolute inset-0 overflow-hidden">
           {Array.from({ length: 20 }).map((_, i) => (
             <div
@@ -77,58 +77,52 @@ export const Overlay: React.FC = () => {
         </div>
 
         <div className="relative text-center p-12 max-w-lg">
-          {/* Envelope icon */}
-          <div className="mb-8 relative">
-            <div className="w-32 h-24 mx-auto bg-gradient-to-br from-green-800 to-green-900 rounded-lg shadow-2xl transform rotate-3 hover:rotate-0 transition-transform duration-500">
-              <div className="absolute top-0 left-0 right-0 h-12 bg-gradient-to-b from-green-700 to-green-800"
-                style={{ clipPath: 'polygon(0 0, 50% 100%, 100% 0)' }} />
-              <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2">
-                <div className="w-6 h-6 rounded-full bg-yellow-400 shadow-lg animate-pulse" />
-              </div>
-            </div>
-          </div>
-
-          {/* Title */}
           <h1
             className="text-5xl md:text-7xl font-serif text-transparent bg-clip-text bg-gradient-to-r from-green-200 via-green-100 to-green-200 mb-4 tracking-wider"
             style={{ fontFamily: "'Cinzel', serif" }}
           >
             ARUM
           </h1>
-
           <p
-            className="text-2xl md:text-3xl text-green-300/80 mb-2 tracking-widest"
+            className="text-2xl md:text-3xl text-green-300/80 mb-10 tracking-widest"
             style={{ fontFamily: "'Playfair Display', serif" }}
           >
             26th Birthday
           </p>
 
-          <p className="text-green-500/60 mb-10 text-sm tracking-widest uppercase">
-            A Cinematic Matcha Journey
-          </p>
-
-          {/* Decorative line */}
-          <div className="w-24 h-px bg-gradient-to-r from-transparent via-green-400 to-transparent mx-auto mb-10" />
-
           <button
             onClick={handleStart}
-            className="group relative px-12 py-4 overflow-hidden rounded-full transition-all duration-500"
+            className="group relative px-12 py-4 overflow-hidden rounded-full transition-all duration-500 border border-green-700 hover:border-green-500"
           >
-            <div className="absolute inset-0 bg-gradient-to-r from-green-800 via-green-700 to-green-800 group-hover:from-green-700 group-hover:via-green-600 group-hover:to-green-700 transition-all duration-500" />
+            <div className="absolute inset-0 bg-green-900/50 group-hover:bg-green-800/80 transition-all duration-500" />
             <span className="relative text-green-100 uppercase tracking-[0.3em] text-sm font-light">
-              Buka Amplop
+              Mulai
             </span>
           </button>
-
-          <p className="mt-6 text-green-600/50 text-xs">
-            ✨ Tap untuk memulai pengalaman magis
-          </p>
         </div>
       </div>
     );
   }
 
-  // Hints Layer (Pointer Events None)
+  // Interruption Phase (Bridge to Beach)
+  if (phase === Phase.Interruption) {
+    return (
+      <div className="absolute inset-0 flex items-center justify-center bg-black z-50 animate-fade-in">
+        <div className="text-center p-8">
+          <p
+            className="text-2xl md:text-4xl text-white font-serif tracking-wide leading-relaxed"
+            style={{ fontFamily: "'Playfair Display', serif" }}
+          >
+            "Eits bentar...<br/>
+            tolong baca pesan-pesan ku ini ya Arum"
+          </p>
+          <div className="mt-6 w-16 h-1 bg-green-500 mx-auto rounded-full animate-pulse" />
+        </div>
+      </div>
+    );
+  }
+
+  // Persistent Hints Layer
   return (
     <div className="absolute top-0 left-0 w-full h-full pointer-events-none z-40 flex flex-col justify-between p-8">
       <div className="text-center w-full">
@@ -143,10 +137,7 @@ export const Overlay: React.FC = () => {
         {phase === Phase.Envelope && (
           <div className="animate-bounce">
             <p className="text-green-900/80 font-serif text-lg tracking-wider">
-              Geser amplop ke atas untuk membuka
-            </p>
-            <p className="text-green-800/50 text-xs mt-2">
-              ✨
+              Geser amplop ke atas
             </p>
           </div>
         )}
@@ -154,12 +145,23 @@ export const Overlay: React.FC = () => {
         {phase === Phase.Cake && (
           <div className="animate-pulse">
             <p className="text-white text-opacity-80 font-serif text-xl tracking-wider">
-              Make a wish & Blow the candles
+              Make a wish & Tiup Lilinnya
             </p>
             <p className="text-xs text-gray-500 mt-2">
-              (Tap lilin atau tiup ke mikrofon)
+              (Klik api lilin atau tiup ke mic)
             </p>
           </div>
+        )}
+
+        {phase === Phase.Beach && (
+           <div className="animate-fade-in-up">
+             <p className="text-white/90 font-serif text-lg tracking-wider drop-shadow-md">
+               Geser layar untuk berkeliling pantai
+             </p>
+             <p className="text-white/60 text-xs mt-1">
+               ✨ Baca setiap papan ucapan ✨
+             </p>
+           </div>
         )}
       </div>
     </div>

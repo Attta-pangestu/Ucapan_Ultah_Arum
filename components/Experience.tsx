@@ -5,7 +5,7 @@ import * as THREE from 'three';
 import { Cake } from './Cake';
 import { Envelope } from './Envelope';
 import { Appreciation } from './Appreciation';
-import { Particles } from './Particles';
+import { BeachWorld } from './BeachWorld';
 import { useStore } from '../store';
 import { Phase } from '../types';
 
@@ -30,15 +30,17 @@ const CameraRig = () => {
         targetPos = new THREE.Vector3(0, 2, 5);
         targetLookAt = new THREE.Vector3(0, 0, 0);
         break;
-      case Phase.Fireworks:
-      case Phase.Message:
-        targetPos = new THREE.Vector3(0, 1, 8);
+      case Phase.Beach:
+        // Position camera to see the beach scene
+        targetPos = new THREE.Vector3(0, 2, 8);
+        targetLookAt = new THREE.Vector3(0, 1, 0);
         break;
       default:
         targetPos = new THREE.Vector3(0, 0, 5);
     }
 
-    if (!isInteracting) {
+    if (!isInteracting && phase !== Phase.Beach) {
+      // Only auto-move camera if NOT in beach mode (let user control beach cam)
       state.camera.position.lerp(targetPos, 2 * delta);
       state.camera.lookAt(targetLookAt);
     }
@@ -50,14 +52,18 @@ const CameraRig = () => {
 // Dynamic Background Color Transition
 const BackgroundController: React.FC = () => {
     const phase = useStore(state => state.phase);
-    const colorRef = useRef(new THREE.Color('#F5E6D3')); // Start Pastel
+    const colorRef = useRef(new THREE.Color('#F5E6D3')); 
 
     useFrame((state) => {
-        // Switch to dark when blowing candles or later
-        const targetHex = (phase >= Phase.Blowing) ? '#050505' : '#F5E6D3';
-        const targetColor = new THREE.Color(targetHex);
+        let targetHex = '#F5E6D3'; // Default Pastel
+
+        if (phase === Phase.Cake || phase === Phase.Blowing || phase === Phase.Interruption) {
+            targetHex = '#050505'; // Dark for cake
+        } else if (phase === Phase.Beach) {
+            targetHex = '#87CEEB'; // Sky Blue for Beach
+        }
         
-        // Smooth lerp
+        const targetColor = new THREE.Color(targetHex);
         colorRef.current.lerp(targetColor, 0.05);
         state.scene.background = colorRef.current;
     });
@@ -72,7 +78,11 @@ export const Experience: React.FC = () => {
 
   useEffect(() => {
     if (controlsRef.current) {
-      if (phase === Phase.Cake || phase === Phase.Blowing) {
+        // Reset controls for Beach exploration
+      if (phase === Phase.Beach) {
+        controlsRef.current.target.set(0, 1, 0);
+        controlsRef.current.maxPolarAngle = Math.PI / 2 - 0.1; // Don't go below ground
+      } else if (phase === Phase.Cake) {
         controlsRef.current.target.set(0, 0.5, 0);
       } else {
         controlsRef.current.target.set(0, 0, 0);
@@ -85,16 +95,16 @@ export const Experience: React.FC = () => {
       case Phase.Intro:
         return 0.1;
       case Phase.Envelope:
-        return 0.6; // Brighter for pastel
+        return 0.6; 
       case Phase.Appreciation:
         return 0.5;
       case Phase.Cake:
         return 0.4;
       case Phase.Blowing:
+      case Phase.Interruption:
         return 0.05;
-      case Phase.Fireworks:
-      case Phase.Message:
-        return 0.1;
+      case Phase.Beach:
+        return 0.8; // Bright sun
       default:
         return 0.2;
     }
@@ -111,8 +121,8 @@ export const Experience: React.FC = () => {
 
       <ambientLight intensity={getAmbientIntensity()} />
 
-      {/* Stars only visible in dark phases */}
-      {(phase >= Phase.Blowing) && (
+      {/* Stars only visible in dark cake phases */}
+      {(phase === Phase.Cake || phase === Phase.Blowing || phase === Phase.Interruption) && (
         <Stars
           radius={100}
           depth={50}
@@ -128,22 +138,22 @@ export const Experience: React.FC = () => {
         <Envelope />
         <Appreciation />
         <Cake />
-        <Particles />
+        <BeachWorld />
 
-        <Environment preset={phase >= Phase.Blowing ? "night" : "city"} />
+        <Environment preset={phase === Phase.Beach ? "sunset" : (phase >= Phase.Cake ? "night" : "city")} />
       </Suspense>
 
       <OrbitControls
         ref={controlsRef}
         enablePan={false}
-        enableZoom={phase === Phase.Cake || phase === Phase.Blowing}
+        enableZoom={phase === Phase.Cake || phase === Phase.Blowing || phase === Phase.Beach}
         minDistance={2}
-        maxDistance={15}
+        maxDistance={20}
         maxPolarAngle={Math.PI / 1.5}
         minPolarAngle={Math.PI / 6}
         onStart={() => setIsInteracting(true)}
         onEnd={() => setIsInteracting(false)}
-        enabled={phase === Phase.Cake || phase === Phase.Blowing}
+        enabled={phase === Phase.Cake || phase === Phase.Blowing || phase === Phase.Beach}
       />
     </Canvas>
   );
