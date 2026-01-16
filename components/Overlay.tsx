@@ -44,21 +44,11 @@ Teruslah menginspirasi!
 
 With love 💚`;
 
-export const Overlay: React.FC = () => {
-  const phase = useStore(state => state.phase);
-  const setPhase = useStore(state => state.setPhase);
-
-  const handleStart = async () => {
-    await AudioManager.init();
-    AudioManager.playSound('bgm');
-    setPhase(Phase.Envelope);
-  };
-
 // --- 2D Components ---
 
 const CartoonMascot: React.FC = () => {
   return (
-    <div className="fixed bottom-4 left-4 md:bottom-8 md:left-8 z-50 flex items-end gap-3 animate-slide-up">
+    <div className="fixed bottom-4 left-4 md:bottom-8 md:left-8 z-50 flex items-end gap-3 animate-slide-up pointer-events-none">
       
       {/* 2D Cake with Animated Flame */}
       <div className="relative w-16 h-16 md:w-20 md:h-20 mr-2">
